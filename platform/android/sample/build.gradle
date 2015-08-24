@@ -1,0 +1,27 @@
+repositories {
+    jcenter()
+}
+
+buildscript {
+    dependencies {
+        classpath 'com.android.tools.build:gradle:1.2.3'
+    }
+}
+
+apply plugin: 'com.android.application'
+
+android {
+
+    compileSdkVersion 22
+    buildToolsVersion '22.0.1'
+
+    defaultConfig {
+        minSdkVersion 8
+        targetSdkVersion 22
+        applicationId "in.uncod.android.bypass.test"
+    }
+}
+
+dependencies {
+    compile project(':library')
+}

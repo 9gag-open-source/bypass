@@ -1,5 +1,8 @@
 LOCAL_PATH := $(call my-dir)
+
 BYPASS_SRC := ../../../../../../src/
+
+BYPASS_INCLUDE_PATH := ../../../../../../src/
 
 include $(CLEAR_VARS)
 
@@ -12,8 +15,8 @@ LOCAL_SRC_FILES := \
 	../../../../../../dep/libsoldout/markdown.c \
 	../../../../../../dep/libsoldout/buffer.c \
 	../../../../../../dep/libsoldout/array.c
-	
-LOCAL_C_INCLUDES := ../../../../../../dep/libsoldout ../../../../../../src /opt/local/include /usr/local/include $(BYPASS_INCLUDE_PATH)
+
+LOCAL_C_INCLUDES := ../../../../../../dep/libsoldout ${LOCAL_PATH}/src /opt/local/include /usr/local/include $(BYPASS_INCLUDE_PATH)
 
 NDK_APP_DST_DIR := ../../../build/ndk/$(TARGET_ARCH_ABI)
 

@@ -16,10 +16,13 @@ import android.text.style.StyleSpan;
 import android.text.style.TypefaceSpan;
 import android.text.style.URLSpan;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.util.Patterns;
 import android.util.TypedValue;
 import in.uncod.android.bypass.Element.Type;
+import in.uncod.android.bypass.style.BaseStyleAdapter;
 import in.uncod.android.bypass.style.HorizontalLineSpan;
+import in.uncod.android.bypass.style.StyleAdapter;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,6 +32,7 @@ public class Bypass {
 		System.loadLibrary("bypass");
 	}
 
+	private final StyleAdapter mStyleAdapter;
 	private final Options mOptions;
 
 	private final int mListItemIndent;
@@ -54,6 +58,7 @@ public class Bypass {
 		mCodeBlockIndent = 10;
 		mHruleSize = 2;
 		mHruleTopBottomPadding = 20;
+		mStyleAdapter = new BaseStyleAdapter();
 	}
 
 	public Bypass(Context context) {
@@ -61,23 +66,29 @@ public class Bypass {
 	}
 
 	public Bypass(Context context, Options options) {
+		this(context, options, new BaseStyleAdapter());
+	}
+
+	public Bypass(Context context, Options options, StyleAdapter styleAdapter) {
 		mOptions = options;
 
 		DisplayMetrics dm = context.getResources().getDisplayMetrics();
 
 		mListItemIndent = (int) TypedValue.applyDimension(mOptions.mListItemIndentUnit,
-			mOptions.mListItemIndentSize, dm);
+				mOptions.mListItemIndentSize, dm);
 
 		mBlockQuoteIndent = (int) TypedValue.applyDimension(mOptions.mBlockQuoteIndentUnit,
-			mOptions.mBlockQuoteIndentSize, dm);
+				mOptions.mBlockQuoteIndentSize, dm);
 
 		mCodeBlockIndent = (int) TypedValue.applyDimension(mOptions.mCodeBlockIndentUnit,
-			mOptions.mCodeBlockIndentSize, dm);
+				mOptions.mCodeBlockIndentSize, dm);
 
 		mHruleSize = (int) TypedValue.applyDimension(mOptions.mHruleUnit,
-			mOptions.mHruleSize, dm);
+				mOptions.mHruleSize, dm);
 
 		mHruleTopBottomPadding = (int) dm.density * 10;
+
+		mStyleAdapter = styleAdapter;
 	}
 
 	public CharSequence markdownToSpannable(String markdown) {
@@ -208,7 +219,9 @@ public class Bypass {
 		if (element.getParent() != null || indexWithinParent < (numberOfSiblings - 1)) {
 			if (type == Type.LIST_ITEM) {
 				if (element.size() == 0 || !element.children[element.size() - 1].isBlockElement()) {
-					builder.append("\n");
+					if (indexWithinParent != numberOfSiblings - 1) {
+						builder.append("\n");
+					}
 				}
 			}
 			else if (element.isBlockElement() && type != Type.BLOCK_QUOTE) {
@@ -224,7 +237,11 @@ public class Bypass {
 					builder.append("\n");
 				}
 				else {
-					builder.append("\n\n");
+					// Append line break only if it isn't the last element
+					// Consider the string '>hello\n\n>world', line break should not applies to the last element (i.e. world)
+					if (indexWithinParent != numberOfSiblings - 1) {
+						builder.append("\n\n");
+					}
 				}
 			}
 		}
@@ -233,27 +250,25 @@ public class Bypass {
 			case HEADER:
 				String levelStr = element.getAttribute("level");
 				int level = Integer.parseInt(levelStr);
-				setSpan(builder, new RelativeSizeSpan(mOptions.mHeaderSizes[level - 1]));
-				setSpan(builder, new StyleSpan(Typeface.BOLD));
+				setSpan(builder, mStyleAdapter.createHeaderSpans(mOptions.mHeaderSizes, level - 1));
 				break;
 			case LIST:
-				setBlockSpan(builder, new LeadingMarginSpan.Standard(mListItemIndent));
+				setBlockSpan(builder, mStyleAdapter.createListSpans(mListItemIndent));
 				break;
 			case EMPHASIS:
-				setSpan(builder, new StyleSpan(Typeface.ITALIC));
+				setSpan(builder, mStyleAdapter.createEmphasisSpans());
 				break;
 			case DOUBLE_EMPHASIS:
-				setSpan(builder, new StyleSpan(Typeface.BOLD));
+				setSpan(builder, mStyleAdapter.createDoubleEmphasisSpans());
 				break;
 			case TRIPLE_EMPHASIS:
-				setSpan(builder, new StyleSpan(Typeface.BOLD_ITALIC));
+				setSpan(builder, mStyleAdapter.createTripleEmphasisSpans());
 				break;
 			case BLOCK_CODE:
-				setSpan(builder, new LeadingMarginSpan.Standard(mCodeBlockIndent));
-				setSpan(builder, new TypefaceSpan("monospace"));
+				setSpan(builder, mStyleAdapter.createBlockCodeSpans(mCodeBlockIndent, "monospace"));
 				break;
 			case CODE_SPAN:
-				setSpan(builder, new TypefaceSpan("monospace"));
+				setSpan(builder, mStyleAdapter.createCodeSpans("monospace"));
 				break;
 			case LINK:
 			case AUTOLINK:
@@ -261,25 +276,24 @@ public class Bypass {
 				if (!TextUtils.isEmpty(link) && Patterns.EMAIL_ADDRESS.matcher(link).matches()) {
 					link = "mailto:" + link;
 				}
-				setSpan(builder, new URLSpan(link));
+				setSpan(builder, mStyleAdapter.createLinkSpans(link));
 				break;
 			case BLOCK_QUOTE:
 				// We add two leading margin spans so that when the order is reversed,
 				// the QuoteSpan will always be in the same spot.
-				setBlockSpan(builder, new LeadingMarginSpan.Standard(mBlockQuoteIndent));
-				setBlockSpan(builder, new QuoteSpan(mOptions.mBlockQuoteColor));
-				setBlockSpan(builder, new LeadingMarginSpan.Standard(mBlockQuoteIndent));
-				setBlockSpan(builder, new StyleSpan(Typeface.ITALIC));
+
+				setBlockSpan(builder, mStyleAdapter.createBlockQuoteSpans(mBlockQuoteIndent, mOptions.mBlockQuoteColor));
+				setSpan(builder, mStyleAdapter.createBlockQuoteTextStyleSpans());
 				break;
 			case STRIKETHROUGH:
-				setSpan(builder, new StrikethroughSpan());
+				setSpan(builder, mStyleAdapter.createStrikethroguhSpans());
 				break;
 			case HRULE:
-				setSpan(builder, new HorizontalLineSpan(mOptions.mHruleColor, mHruleSize, mHruleTopBottomPadding));
+				setSpan(builder, mStyleAdapter.createHruleSpans(mOptions.mHruleColor, mHruleSize, mHruleTopBottomPadding));
 				break;
 			case IMAGE:
 				if (imageDrawable != null) {
-					setSpan(builder, new ImageSpan(imageDrawable));
+					setSpan(builder, mStyleAdapter.createImageSpans(mOptions, imageDrawable));
 				}
 				break;
 		}
@@ -287,14 +301,22 @@ public class Bypass {
 		return builder;
 	}
 
-	private static void setSpan(SpannableStringBuilder builder, Object what) {
-		builder.setSpan(what, 0, builder.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+	private static void setSpan(SpannableStringBuilder builder, Object... what) {
+		if (what == null) return;
+
+		for (int i = 0; i < what.length; i++) {
+			builder.setSpan(what[i], 0, builder.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+		}
 	}
 
 	// These have trailing newlines that we want to avoid spanning
-	private static void setBlockSpan(SpannableStringBuilder builder, Object what) {
-		int length = Math.max(0, builder.length() - 1);
-		builder.setSpan(what, 0, length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+	private static void setBlockSpan(SpannableStringBuilder builder, Object... what) {
+		if (what == null) return;
+
+		for (int i = 0; i < what.length; i++) {
+			int length = Math.max(0, builder.length() - 1);
+			builder.setSpan(what[i], 0, length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+		}
 	}
 
 	/**

@@ -45,14 +45,14 @@ android {
     }
 }
 
-clean.doFirst {
-    println "Cleaning up $projectDir/src/main/jniLibs/"
-    delete "$projectDir/src/main/jniLibs/"
-}
+//clean.doFirst {
+//    println "Cleaning up $projectDir/src/main/jniLibs/"
+//    delete "$projectDir/src/main/jniLibs/"
+//}
 
-install.doLast {
-	ndkBuild.execute()
-}
+//install.doLast {
+//	ndkBuild.execute()
+//}
 
 task ndkBuild(type: Exec, description: 'Compile JNI source via NDK') {
     def ndkDir = project.android.ndkDirectory.absolutePath

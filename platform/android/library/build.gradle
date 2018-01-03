@@ -50,6 +50,10 @@ clean.doFirst {
     delete "$projectDir/src/main/jniLibs/"
 }
 
+install.doLast {
+	ndkBuild.execute()
+}
+
 task ndkBuild(type: Exec, description: 'Compile JNI source via NDK') {
     def ndkDir = project.android.ndkDirectory.absolutePath
 

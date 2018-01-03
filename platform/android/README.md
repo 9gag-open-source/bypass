@@ -7,31 +7,26 @@
 	text.setText(string);
 	text.setMovementMethod(LinkMovementMethod.getInstance());
 
-### Maven Dependency
-If you just want to include Bypass in your Maven project, add the following
-dependency block to your `pom.xml`:
-
-    <dependency>
-        <groupId>in.uncod.android.bypass</groupId>
-        <artifactId>bypass</artifactId>
-        <type>apklib</type>
-        <version>1.1</version>
-    </dependency>
-
 ### Manual Build
 Make sure `$ANDROID_NDK_HOME` is correctly set to the root directory of your
 NDK installation. Also, if Boost lives in a non-standard directory (or you're
 on Windows) you'll need to set `$BYPASS_INCLUDE_PATH` to its parent directory.
-
-#### Maven
-    cd ./platform/android
-    mvn install
 
 #### Library Project
     cd ./platform/android/library
     ndk-build
 
 Then simply point to the library from your project.
+
+## Build
+In order to speed up the build, we have prebuilt the binaries into jniLibs
+If you want to make it build at the same time as you compile, you can checkout build.gradle and enable the task
+```
+tasks.withType(JavaCompile) {
+    compileTask -> compileTask.dependsOn ndkBuild
+}
+```
+You can also build the binaries independently by calling `./gradlew :library:ndkBuild`
 
 ## Speed
 

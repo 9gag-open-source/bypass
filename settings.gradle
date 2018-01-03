@@ -1,0 +1,2 @@
+include ':androidLib'
+project(':androidLib').projectDir = file("platform/android/library")

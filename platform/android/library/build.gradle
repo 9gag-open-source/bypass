@@ -15,6 +15,7 @@ repositories {
 }
 
 apply plugin: 'com.android.library'
+apply plugin: 'com.github.dcendents.android-maven'
 
 android {
     compileSdkVersion 26
@@ -32,7 +33,7 @@ android {
     sourceSets {
         main {
             jni.srcDirs = []
-            jniLibs.srcDirs = ["build/ndk"]
+            jniLibs.srcDirs = ["src/main/jniLibs"]
         }
     }
 
@@ -44,14 +45,30 @@ android {
     }
 }
 
+clean.doFirst {
+    println "Cleaning up $projectDir/src/main/jniLibs/"
+    delete "$projectDir/src/main/jniLibs/"
+}
+
 task ndkBuild(type: Exec, description: 'Compile JNI source via NDK') {
     def ndkDir = project.android.ndkDirectory.absolutePath
 
     workingDir "$projectDir/src/main/jni"
 
     commandLine "$ndkDir/ndk-build"
+
+    doLast {
+        println "Copying artifacts, $projectDir/build/ndk"
+        copy {
+            from ("$projectDir/build/ndk")
+            into ("$projectDir/src/main/jniLibs")
+            include "**/*.so"
+        }
+    }
 }
 
-tasks.withType(JavaCompile) {
-    compileTask -> compileTask.dependsOn ndkBuild
-}
+// Enable the task dependecy below to trigger build at the same time
+
+// tasks.withType(JavaCompile) {
+//     compileTask -> compileTask.dependsOn ndkBuild
+// }

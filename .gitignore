@@ -13,7 +13,10 @@ build.xml
 .fseventsd
 .TemporaryItems
 *.o
-*.so
+.gradle/
+.gradle
+**/.gradle/
+.swp
 *.so.1
 *.dSYM
 dep/libsoldout*/*.d

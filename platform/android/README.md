@@ -52,3 +52,6 @@ The following benchmarks were obtained by clocking the parsing of Sundown's read
     03-01 15:14:44.662: D/AndDown(9047): onCreate:      2 ms, convert to HTML
     03-01 15:14:44.662: D/AndDown(9047): onCreate:      167 ms, convert to Spanned
     03-01 15:14:44.662: D/AndDown(9047): onCreate: end, 173 ms
+
+## Proguard
+Copy proguard.txt to your app's proguard

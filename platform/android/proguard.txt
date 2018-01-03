@@ -1,0 +1,9 @@
+# This methods are found in bypass.cpp
+
+-keep class in.uncod.android.bypass.Document { <init>(...); }
+-keep class in.uncod.android.bypass.Element {
+    <init>(...);
+    void setChildren(...);
+    void setParent(...);
+    void addAttribute(...);
+}

@@ -20,4 +20,8 @@ allprojects {
         google()
         maven { url 'https://jitpack.io' }
     }
+
+	dependencies {
+	        compile 'com.github.markjohndoyle.boost-nar:asio:1.57.0+nar.10'
+	}
 }

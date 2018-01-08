@@ -1,0 +1,78 @@
+buildscript {
+    repositories {
+        google()
+        jcenter()
+    }
+
+    dependencies { 
+        classpath 'com.android.tools.build:gradle:3.0.1'
+	}
+}
+
+repositories {
+    google()
+    jcenter()
+}
+
+apply plugin: 'com.android.library'
+apply plugin: 'com.github.dcendents.android-maven'
+
+android {
+    compileSdkVersion 26
+    buildToolsVersion '26.0.2'
+
+    defaultConfig {
+        minSdkVersion 16
+        targetSdkVersion 26
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+
+    sourceSets {
+        main {
+            jni.srcDirs = []
+            jniLibs.srcDirs = ["src/main/jniLibs"]
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+//clean.doFirst {
+//    println "Cleaning up $projectDir/src/main/jniLibs/"
+//    delete "$projectDir/src/main/jniLibs/"
+//}
+
+//install.doLast {
+//	ndkBuild.execute()
+//}
+
+task ndkBuild(type: Exec, description: 'Compile JNI source via NDK') {
+    def ndkDir = project.android.ndkDirectory.absolutePath
+
+    workingDir "$projectDir/src/main/jni"
+
+    commandLine "$ndkDir/ndk-build"
+
+    doLast {
+        println "Copying artifacts, $projectDir/build/ndk"
+        copy {
+            from ("$projectDir/build/ndk")
+            into ("$projectDir/src/main/jniLibs")
+            include "**/*.so"
+        }
+    }
+}
+
+// Enable the task dependecy below to trigger build at the same time
+
+// tasks.withType(JavaCompile) {
+//     compileTask -> compileTask.dependsOn ndkBuild
+// }

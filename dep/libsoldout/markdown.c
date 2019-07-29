@@ -1701,7 +1701,9 @@ markdown(struct buf *ob, struct buf *ib, const struct mkd_renderer *rndrer) {
 		rndr.active_char['['] = char_link;
 	rndr.active_char['<'] = char_langle_tag;
 	rndr.active_char['\\'] = char_escape;
-	rndr.active_char['&'] = char_entity;
+
+	// FIXME: Commented out this as a workaroudn for links being truncated
+	// rndr.active_char['&'] = char_entity;
 
 	/* first pass: looking for references, copying everything else */
 	beg = 0;
